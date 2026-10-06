@@ -1,10 +1,13 @@
 name: Sync AIA fund data
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
   schedule:
     - cron: "30 2 1 * *"
 jobs:
   sync:
+    if: github.actor != 'fund-intel-bot'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -19,6 +22,6 @@ jobs:
         run: |
           git config user.name "fund-intel-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add lib/funds.ts
+          git add data/aia-fund-data.ts
           git diff --cached --quiet || git commit -m "Sync AIA annual fund performance"
           git push

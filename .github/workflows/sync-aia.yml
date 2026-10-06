@@ -1,0 +1,24 @@
+name: Sync AIA fund data
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 2 1 * *"
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - run: npm run sync:aia
+      - name: Commit updated fund data
+        run: |
+          git config user.name "fund-intel-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add lib/funds.ts
+          git diff --cached --quiet || git commit -m "Sync AIA annual fund performance"
+          git push

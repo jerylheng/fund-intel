@@ -1,0 +1,2 @@
+export function yearlyProjection(initial:number,rate:number,years:number,annualContribution=0){const rows:{year:number;start:number;contribution:number;growth:number;end:number}[]=[];let value=initial;for(let year=1;year<=years;year++){const start=value;const contribution=annualContribution;const growth=(start+contribution)*rate/100;value=start+contribution+growth;rows.push({year,start,contribution,growth,end:value});}return rows;}
+export function money(v:number){return new Intl.NumberFormat("en-SG",{style:"currency",currency:"SGD",maximumFractionDigits:0}).format(v);}

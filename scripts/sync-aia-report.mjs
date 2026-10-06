@@ -1,8 +1,9 @@
+import https from "node:https";
 import fs from "node:fs/promises";import path from "node:path";import pdf from "pdf-parse";
 const REPORT_URL="https://www.aia.com.sg/content/dam/sg-wise/en/docs/our-products/save-and-invest/aia-annual-funds-reports/annual/aia-annual-funds-report-2025.pdf";
 const fundsFile=path.join(process.cwd(),"lib","funds.ts");const output=path.join(process.cwd(),"data","aia-fund-data.ts");
 const source=await fs.readFile(fundsFile,"utf8");const names=[...source.matchAll(/"([^"]+)"(?=,?)/g)].map(m=>m[1]).filter(n=>n.startsWith("AIA "));const unique=[...new Set(names)].slice(0,41);
-const buf=Buffer.from(await(await fetch(REPORT_URL)).arrayBuffer());const text=(await pdf(buf)).text;
+const buf=await new Promise((resolve,reject)=>https.get(REPORT_URL,{headers:{"User-Agent":"Mozilla/5.0"}},res=>{const chunks=[];res.on("data",x=>chunks.push(x));res.on("end",()=>resolve(Buffer.concat(chunks)));res.on("error",reject)}).on("error",reject=>{}));const text=(await pdf(buf)).text;
 const num="(?:-?\\d+(?:\\.\\d+)?)";const val="(?:N/A|"+num+")";
 function esc(s){return s.replace(/[.*+?^()|[\]\\]/g,"\\$&")}
 function blockFor(name){const heading=name.toUpperCase();const re=new RegExp("^"+esc(heading)+"\\s*$","mi");const m=re.exec(text);if(!m)return null;const start=text.indexOf("FUND PERFORMANCE",m.index);if(start<0||start-m.index>3000)return null;return text.slice(start,start+5000)}

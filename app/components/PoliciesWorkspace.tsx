@@ -5,7 +5,7 @@ import { FileText, Plus, ShieldCheck, Trash2, X, CalendarDays, Wallet } from "lu
 type Policy={id:string;insurer:string|null;policy_name:string;policy_type:string;policy_number_last4:string|null;sum_assured:number|string;annual_premium:number|string;start_date:string|null;review_date:string|null;status:string;notes?:string|null};
 const money=(v:number)=>new Intl.NumberFormat("en-SG",{style:"currency",currency:"SGD",maximumFractionDigits:0}).format(v);
 const types=[["hospitalisation","Hospitalisation"],["life","Life"],["critical_illness","Critical illness"],["disability_income","Disability income"],["personal_accident","Personal accident"],["long_term_care","Long-term care"],["investment_linked","Investment-linked"],["savings","Savings"],["other","Other"]];
-const typeLabels:Record<string,string>=Object.fromEntries(types);
+const typeLabels:Record<string,string>=Object.fromEntries(types.map(t=>[t[0],t[1]] as const));
 export default function PoliciesWorkspace({clientId,clientName}:{clientId?:string;clientName:string}) {
  const [policies,setPolicies]=useState<Policy[]>([]);const [loading,setLoading]=useState(false);const [showForm,setShowForm]=useState(false);const [busy,setBusy]=useState(false);const [error,setError]=useState("");
  const [insurer,setInsurer]=useState("");const [name,setName]=useState("");const [type,setType]=useState("hospitalisation");const [last4,setLast4]=useState("");const [sum,setSum]=useState("0");const [premium,setPremium]=useState("0");const [start,setStart]=useState("");const [review,setReview]=useState("");const [status,setStatus]=useState("active");const [notes,setNotes]=useState("");

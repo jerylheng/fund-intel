@@ -15,6 +15,26 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   const patch: Record<string, unknown> = {};
   for (const key of fields) if (Object.prototype.hasOwnProperty.call(body, key)) patch[key] = body[key];
   if (typeof patch.full_name === "string") patch.full_name = patch.full_name.trim().slice(0, 120);
+  if (patch.email !== undefined && typeof patch.email === "string") patch.email = patch.email.trim().slice(0, 254) || null;
+  if (patch.phone !== undefined && typeof patch.phone === "string") patch.phone = patch.phone.trim().slice(0, 40) || null;
+  if (patch.date_of_birth !== undefined && patch.date_of_birth !== null && (typeof patch.date_of_birth !== "string" || !/^\\d{4}-\\d{2}-\\d{2}$/.test(patch.date_of_birth))) return NextResponse.json({ error: "Use a valid date of birth." }, { status: 400 });
+  for (const key of ["annual_income","monthly_expenses","cash_savings","investments","cpf_oa","cpf_sa_ma_ra","property_value","outstanding_loans","monthly_investment","target_retirement_income"] as const) {
+    if (patch[key] !== undefined) {
+      const n = Number(patch[key]);
+      if (!Number.isFinite(n) || n < 0 || n > 999999999999) return NextResponse.json({ error: "Enter valid non-negative financial amounts." }, { status: 400 });
+      patch[key] = n;
+    }
+  }
+  if (patch.dependants_count !== undefined) {
+    const n = Number(patch.dependants_count);
+    if (!Number.isInteger(n) || n < 0 || n > 30) return NextResponse.json({ error: "Dependants must be a whole number from 0 to 30." }, { status: 400 });
+    patch.dependants_count = n;
+  }
+  if (patch.target_retirement_age !== undefined) {
+    const n = Number(patch.target_retirement_age);
+    if (!Number.isInteger(n) || n < 40 || n > 100) return NextResponse.json({ error: "Retirement age must be from 40 to 100." }, { status: 400 });
+    patch.target_retirement_age = n;
+  }
   if (patch.full_name === "") return NextResponse.json({ error: "Client name cannot be empty." }, { status: 400 });
   if (patch.review_status !== undefined && !allowedStatus.has(String(patch.review_status))) return NextResponse.json({ error: "Invalid review status." }, { status: 400 });
   if (Object.keys(patch).length === 0) return NextResponse.json({ error: "No valid fields provided." }, { status: 400 });

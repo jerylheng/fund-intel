@@ -1,80 +1,51 @@
-# Finwise — Financial Planning Workspace
+# Finwise — Private Financial Review
 
-Finwise is an independent financial-planning workspace prototype for advisers. It includes adviser authentication, private client records, household and financial profile capture, goal tracking, policy register, retirement scenarios and a protection-review checklist.
+Finwise is a browser-only consultation workspace for Singapore financial advisers. The default page opens without a login and is designed for use during live client meetings. Client inputs are held in page memory, calculations run in the browser, and a client-ready report can be printed or saved as PDF from the browser.
 
-## Architecture
+## Privacy model
 
-- Next.js App Router on Vercel
-- Supabase Auth for adviser sign-in
-- Supabase Postgres for persistent planning records
-- Row-level security (RLS) to isolate each adviser's client records
-- Server-side API routes; the browser only uses the public/anon key
-- GitHub Actions build validation on pushes and pull requests
+- No sign-in is required for the default workspace.
+- The current review is held in React page state only; this page does not write client details to localStorage, cookies, Supabase, or Finwise API routes.
+- Starting a new review clears the current inputs after confirmation.
+- The PDF is generated through the browser's print dialog; Finwise does not upload or store the PDF.
+- This is not a guarantee that a device or hosting platform leaves no metadata. Avoid shared/public devices, clear the session between meetings, protect exported PDFs, and follow your firm's policies and applicable PDPA requirements.
+- The older authenticated Supabase API/schema remains in the repository but is not used by this default review screen.
 
-## Setup
+## Included in the private workspace
 
-1. Create a Supabase project. Select a region appropriate for your organisation's data-residency obligations; Singapore may be available depending on the account/project options.
-2. In Supabase SQL Editor, run `supabase/migrations/202610120001_initial_schema.sql`.
-3. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to Vercel Project Settings → Environment Variables (Production and Preview as appropriate). Copy `.env.example` for local setup.
-4. Configure Supabase Auth email confirmation and the allowed redirect URL `https://YOUR_DOMAIN/auth/callback` plus local development callback URLs.
-5. Redeploy the Vercel project, open `/login`, and create/sign into an adviser account.
-6. Verify that one adviser cannot read, update or delete another adviser's clients, goals, policies or reviews before entering real customer data.
+- No-login client snapshot with optional name/adviser fields
+- Income, expenses, monthly surplus, savings rate, assets, liabilities and estimated net worth
+- CPF OA, SA/MediSave and RA balances kept as separate inputs
+- Retirement target adjusted for inflation, contribution and asset projections, and a simplified capital-gap indicator
+- Manually entered CPF LIFE payout estimate, sourced from the official CPF Board Retirement Payout Planner
+- Singapore CPF reference points for members turning 55 in 2026: BRS $110,200, FRS $220,400 and ERS $440,800, with official illustrative CPF LIFE payout references
+- Automatically generated strengths, gaps and suggested next steps
+- Print-optimised client report suitable for “Save as PDF”
+- Responsive mobile and desktop layouts
 
-**Never place a Supabase service-role key in a `NEXT_PUBLIC_*` variable or in browser code.** This app is designed to use the public/anon key with authenticated sessions and database RLS.
+## Calculation notes and limitations
 
-## Current implemented functionality
+This is a planning aid, not an official CPF calculation, product illustration, guarantee or personalised recommendation. It does not model all CPF contribution allocation rules, age-based contribution rates, account closures/transfers, property-related CPF use, tax, fees, insurance cash values or sequence-of-returns risk. The CPF balance projection uses the selected illustrative annual growth rate; the CPF LIFE payout is entered manually because the actual amount depends on individual details and CPF Board rules. The 25× annual retirement-income-gap benchmark is a simplified heuristic and must not be treated as a guarantee. Confirm client-specific CPF LIFE estimates and retirement sums with official CPF Board tools.
 
-- Authenticated adviser workspace with sign-in, registration, sign-out and protected routes
-- Client directory with persistent create/read/update/delete API support
-- Client profiles: contact details, date of birth, residency and marital status, dependants count, income, expenses, cash, investments, separate CPF OA and SA/MA/RA balances, property, loans and retirement assumptions
-- Financial roadmap and illustrative retirement projection controls
-- Persistent financial goals with target, current funding, date, priority and status
-- Detailed asset and liability ledger that imports opening profile balances and reconciles cash, investments, CPF, property and liabilities back to the client net-worth summary
-- Persistent retirement scenarios with named assumptions, expected return, inflation, contribution, retirement age and income target
-- Household and dependant records with relationships, dates of birth and financial dependency
-- Persistent policy register with insurer, policy type, last four digits only, sum assured, premium, review date and status
-- Protection review checklist persisted to the client review record
-- Row-level security policies for adviser-owned records
-- Metadata-only audit events for key client, goal, policy and review actions
-- Responsive desktop and mobile layouts
+Official references:
+- [CPF retirement sums](https://www.cpf.gov.sg/service/article/what-are-the-retirement-sums-basic-retirement-sum-brs-full-retirement-sum-frs-and-enhanced-retirement-sum-ers)
+- [CPF LIFE monthly payout estimates](https://www.cpf.gov.sg/service/article/how-much-cpf-payouts-can-i-get-every-month)
 
-## Known limitations before production use
+## Development
 
-- This repository contains the application setup and migration; a Supabase project still must be provisioned and its URL/key added to Vercel.
-- Build/deployment must be verified after those environment variables are configured.
-- Financial projections are simplified illustrations, not actuarial/CPF calculations or personalised recommendations. They do not yet model CPF LIFE, taxes, fees, policy cash values, sequence-of-returns risk or all cash-flow timing details.
-- Full review history, client document storage and client-ready report exports remain to be built. CPF OA and combined SA/MA/RA values are captured separately in the client profile.
-- Policy records currently support create/read/delete; editing, document verification and coverage-gap analysis remain future work.
-- No team sharing, adviser firm hierarchy, audit-log viewer, export/report workflow, backup/restore testing or formal penetration test has been completed.
-- This is not an official AIA or Finjaro website. Demo-free mode is used; no fictitious client records are preloaded.
-- Confirm applicable PDPA obligations, data-processing terms, retention policy and organisational approvals before storing identifiable client financial information.
-
-## Local development
+Built with Next.js, React, TypeScript, Recharts and Lucide icons.
 
 ```bash
 npm install
-cp .env.example .env.local
 npm run dev
-```
-
-Open http://localhost:3000.
-
-## Build
-
-```bash
 npm run build
 ```
 
-GitHub Actions runs the production build for pushes and pull requests to `main`.
+The app is deployed as a web application; the browser needs an internet connection to open it. After the page loads, client inputs and projections run locally in the browser and are not submitted by the review page. Build validation is configured in GitHub Actions.
 
-## Data model
+## Future considerations
 
-The initial migration creates:
-- Adviser profiles and clients
-- Dependants
-- Assets and liabilities
-- Policies
-- Financial goals
-- Client review records
-
-All client-linked tables use adviser ownership policies and row-level security.
+- Validate the report layout on mobile browsers and desktop PDF print engines.
+- Add an explicit, tested “clear review” workflow for shared devices.
+- Add deeper CPF modelling only with verified official assumptions and clear cohort/age-specific logic.
+- If persistent client records are reintroduced later, keep them separate from this private quick-review mode and require explicit opt-in, authentication and access controls.

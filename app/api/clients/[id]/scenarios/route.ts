@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { recordAudit } from "@/lib/audit";
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 export async function GET(_request:Request,context:{params:Promise<{id:string}>}) {
  const supabase=await createSupabaseServerClient();if(!supabase)return NextResponse.json({error:"Database is not configured."},{status:503});
@@ -25,5 +26,6 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
  const notes=typeof body.notes==="string"?body.notes.slice(0,4000):null;
  const {data,error}=await supabase.from("client_planning_scenarios").insert({adviser_id:user.id,client_id:id,name,starting_investable_assets:numbers.starting_investable_assets,monthly_contribution:numbers.monthly_contribution,retirement_age,target_monthly_income:numbers.target_monthly_income,expected_annual_return_pct,inflation_pct,notes}).select("id,name,starting_investable_assets,monthly_contribution,retirement_age,target_monthly_income,expected_annual_return_pct,inflation_pct,notes,created_at,updated_at").single();
  if(error||!data)return NextResponse.json({error:"Could not save the scenario. Confirm the database migration is applied."},{status:500});
+ await recordAudit(supabase,user.id,"create","scenario",data.id,id,["name","starting_investable_assets","monthly_contribution","retirement_age","target_monthly_income","expected_annual_return_pct","inflation_pct","notes"]);
  return NextResponse.json({scenario:data},{status:201});
 }

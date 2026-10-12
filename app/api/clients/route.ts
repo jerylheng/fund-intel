@@ -20,7 +20,7 @@ export async function GET() {
     id: c.id, name: c.full_name, email: c.email || "", phone: c.phone || "", dateOfBirth: c.date_of_birth || "", residencyStatus: c.residency_status || "", maritalStatus: c.marital_status || "", dependantsCount: Number(c.dependants_count) || 0, role: c.occupation || "Client", age: c.date_of_birth ? Math.max(0, new Date().getFullYear() - new Date(c.date_of_birth).getFullYear() - (new Date().toISOString().slice(5,10) < c.date_of_birth.slice(5,10) ? 1 : 0)) : null,
     income: Number(c.annual_income) / 12, expenses: Number(c.monthly_expenses),
     cash: Number(c.cash_savings), investments: Number(c.investments),
-    cpf: Number(c.cpf_oa) + Number(c.cpf_sa_ma_ra), property: Number(c.property_value),
+    cpf: Number(c.cpf_oa) + Number(c.cpf_sa_ma_ra), cpfOa: Number(c.cpf_oa), cpfSaMaRa: Number(c.cpf_sa_ma_ra), property: Number(c.property_value),
     loans: Number(c.outstanding_loans), monthlyInvest: Number(c.monthly_investment),
     retirementAge: c.target_retirement_age, retirementTarget: Number(c.target_retirement_income),
     status: statusMap[c.review_status] ?? "New", reviewDueDate: c.review_due_date
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
     id: data.id, name: data.full_name, email: data.email || "", phone: data.phone || "", dateOfBirth: data.date_of_birth || "", residencyStatus: data.residency_status || "", maritalStatus: data.marital_status || "", dependantsCount: Number(data.dependants_count) || 0, role: data.occupation || "Client", age: data.date_of_birth ? Math.max(0, new Date().getFullYear() - new Date(data.date_of_birth).getFullYear() - (new Date().toISOString().slice(5,10) < data.date_of_birth.slice(5,10) ? 1 : 0)) : null,
     income: Number(data.annual_income) / 12, expenses: Number(data.monthly_expenses),
     cash: Number(data.cash_savings), investments: Number(data.investments),
-    cpf: Number(data.cpf_oa) + Number(data.cpf_sa_ma_ra), property: Number(data.property_value),
+    cpf: Number(data.cpf_oa) + Number(data.cpf_sa_ma_ra), cpfOa: Number(data.cpf_oa), cpfSaMaRa: Number(data.cpf_sa_ma_ra), property: Number(data.property_value),
     loans: Number(data.outstanding_loans), monthlyInvest: Number(data.monthly_investment),
     retirementAge: data.target_retirement_age, retirementTarget: Number(data.target_retirement_income),
     status: statusMap[data.review_status] ?? "New", reviewDueDate: data.review_due_date

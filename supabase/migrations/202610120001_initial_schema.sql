@@ -171,23 +171,23 @@ for all to authenticated using (adviser_id = (select auth.uid())) with check (ad
 
 drop policy if exists "advisers manage own dependants" on public.client_dependants;
 create policy "advisers manage own dependants" on public.client_dependants
-for all to authenticated using (adviser_id = (select auth.uid())) with check (adviser_id = (select auth.uid()));
+for all to authenticated using (adviser_id = (select auth.uid()) and exists (select 1 from public.clients c where c.id = client_id and c.adviser_id = (select auth.uid()))) with check (adviser_id = (select auth.uid()) and exists (select 1 from public.clients c where c.id = client_id and c.adviser_id = (select auth.uid())));
 
 drop policy if exists "advisers manage own assets and liabilities" on public.client_assets_liabilities;
 create policy "advisers manage own assets and liabilities" on public.client_assets_liabilities
-for all to authenticated using (adviser_id = (select auth.uid())) with check (adviser_id = (select auth.uid()));
+for all to authenticated using (adviser_id = (select auth.uid()) and exists (select 1 from public.clients c where c.id = client_id and c.adviser_id = (select auth.uid()))) with check (adviser_id = (select auth.uid()) and exists (select 1 from public.clients c where c.id = client_id and c.adviser_id = (select auth.uid())));
 
 drop policy if exists "advisers manage own policies" on public.client_policies;
 create policy "advisers manage own policies" on public.client_policies
-for all to authenticated using (adviser_id = (select auth.uid())) with check (adviser_id = (select auth.uid()));
+for all to authenticated using (adviser_id = (select auth.uid()) and exists (select 1 from public.clients c where c.id = client_id and c.adviser_id = (select auth.uid()))) with check (adviser_id = (select auth.uid()) and exists (select 1 from public.clients c where c.id = client_id and c.adviser_id = (select auth.uid())));
 
 drop policy if exists "advisers manage own goals" on public.client_goals;
 create policy "advisers manage own goals" on public.client_goals
-for all to authenticated using (adviser_id = (select auth.uid())) with check (adviser_id = (select auth.uid()));
+for all to authenticated using (adviser_id = (select auth.uid()) and exists (select 1 from public.clients c where c.id = client_id and c.adviser_id = (select auth.uid()))) with check (adviser_id = (select auth.uid()) and exists (select 1 from public.clients c where c.id = client_id and c.adviser_id = (select auth.uid())));
 
 drop policy if exists "advisers manage own reviews" on public.client_reviews;
 create policy "advisers manage own reviews" on public.client_reviews
-for all to authenticated using (adviser_id = (select auth.uid())) with check (adviser_id = (select auth.uid()));
+for all to authenticated using (adviser_id = (select auth.uid()) and exists (select 1 from public.clients c where c.id = client_id and c.adviser_id = (select auth.uid()))) with check (adviser_id = (select auth.uid()) and exists (select 1 from public.clients c where c.id = client_id and c.adviser_id = (select auth.uid())));
 
 grant usage on schema public to authenticated;
 grant select, insert, update, delete on public.adviser_profiles, public.clients, public.client_dependants, public.client_assets_liabilities, public.client_policies, public.client_goals, public.client_reviews to authenticated;

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { recordAudit } from "@/lib/audit";
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const types = new Set(["retirement","property","education","protection","legacy","investment","other"]);
 const priorities = new Set(["low","medium","high"]);
@@ -28,5 +29,6 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
  const notes=typeof body.notes==="string"?body.notes.slice(0,4000):null;
  const {data,error}=await supabase.from("client_goals").insert({adviser_id:user.id,client_id:id,title,goal_type,target_amount,current_amount,target_date,priority,status,notes}).select("id,title,goal_type,target_amount,current_amount,target_date,priority,status,notes,created_at,updated_at").single();
  if(error||!data)return NextResponse.json({error:"Could not save the goal. Confirm the client exists and the database migration is applied."},{status:500});
+ await recordAudit(supabase,user.id,"create","goal",data.id,id,["title","goal_type","target_amount","current_amount","target_date","priority","status","notes"]);
  return NextResponse.json({goal:data},{status:201});
 }

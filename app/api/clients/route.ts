@@ -12,10 +12,10 @@ export async function GET() {
   if (!supabase) return NextResponse.json({ error: "Database is not configured." }, { status: 503 });
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
-  const { data, error } = await supabase.from("clients").select("id,full_name,occupation,annual_income,monthly_expenses,cash_savings,investments,cpf_oa,cpf_sa_ma_ra,property_value,outstanding_loans,monthly_investment,target_retirement_age,target_retirement_income,review_status,review_due_date").eq("adviser_id", user.id).order("updated_at", { ascending: false });
+  const { data, error } = await supabase.from("clients").select("id,full_name,occupation,date_of_birth,annual_income,monthly_expenses,cash_savings,investments,cpf_oa,cpf_sa_ma_ra,property_value,outstanding_loans,monthly_investment,target_retirement_age,target_retirement_income,review_status,review_due_date").eq("adviser_id", user.id).order("updated_at", { ascending: false });
   if (error) return NextResponse.json({ error: "Could not load client records." }, { status: 500 });
   return NextResponse.json({ clients: (data ?? []).map(c => ({
-    id: c.id, name: c.full_name, role: c.occupation || "Client", age: null,
+    id: c.id, name: c.full_name, role: c.occupation || "Client", age: c.date_of_birth ? Math.max(0, new Date().getFullYear() - new Date(c.date_of_birth).getFullYear() - (new Date().toISOString().slice(5,10) < c.date_of_birth.slice(5,10) ? 1 : 0)) : null,
     income: Number(c.annual_income) / 12, expenses: Number(c.monthly_expenses),
     cash: Number(c.cash_savings), investments: Number(c.investments),
     cpf: Number(c.cpf_oa) + Number(c.cpf_sa_ma_ra), property: Number(c.property_value),

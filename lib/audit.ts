@@ -5,7 +5,7 @@ export async function recordAudit(
   supabase: SupabaseClient,
   adviserId: string,
   action: "create" | "update" | "delete" | "review",
-  entityType: "client" | "goal" | "policy" | "review",
+  entityType: "client" | "goal" | "policy" | "review" | "asset" | "dependant" | "scenario",
   entityId: string | null,
   clientId: string | null,
   changedFields: string[] = [],

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { recordAudit } from "@/lib/audit";
 
+const isValidIsoDate = (value: string) => /^\\d{4}-\\d{2}-\\d{2}$/.test(value) && !Number.isNaN(new Date(value+"T00:00:00Z").getTime()) && new Date(value+"T00:00:00Z").toISOString().slice(0,10) === value;
 const numberOrZero = (value: unknown) => {
   const n = typeof value === "number" ? value : Number(value ?? 0);
   return Number.isFinite(n) && n >= 0 ? n : 0;
@@ -38,7 +39,7 @@ export async function POST(request: Request) {
   const email = typeof body.email === "string" && body.email.trim() ? body.email.trim().slice(0, 254) : null;
   const occupation = typeof body.occupation === "string" ? body.occupation.trim().slice(0, 120) : null;
   const phone = typeof body.phone === "string" ? body.phone.trim().slice(0, 40) : null;
-  const date_of_birth = typeof body.date_of_birth === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.date_of_birth) ? body.date_of_birth : null;
+  const date_of_birth = typeof body.date_of_birth === "string" && body.date_of_birth.trim() ? body.date_of_birth.trim() : null;
   const residency_status = typeof body.residency_status === "string" ? body.residency_status.slice(0, 60) : null;
   const marital_status = typeof body.marital_status === "string" ? body.marital_status.slice(0, 30) : null;
   const dependantsRaw = Number(body.dependants_count ?? 0);
@@ -50,7 +51,7 @@ export async function POST(request: Request) {
   }
   const retirementAgeInput = Number(body.target_retirement_age ?? 65);
   if (!Number.isInteger(retirementAgeInput) || retirementAgeInput < 40 || retirementAgeInput > 100) return NextResponse.json({ error: "Retirement age must be from 40 to 100." }, { status: 400 });
-  if (date_of_birth && (date_of_birth > new Date().toISOString().slice(0,10) || new Date(date_of_birth+"T00:00:00Z").toISOString().slice(0,10) !== date_of_birth)) return NextResponse.json({ error: "Enter a valid date of birth in the past." }, { status: 400 });
+  if (date_of_birth && (!isValidIsoDate(date_of_birth) || date_of_birth > new Date().toISOString().slice(0,10))) return NextResponse.json({ error: "Enter a valid date of birth in the past." }, { status: 400 });
   const payload = {
     adviser_id: user.id, full_name, email, phone, date_of_birth, residency_status, marital_status, dependants_count, occupation,
     annual_income: numberOrZero(body.annual_income),

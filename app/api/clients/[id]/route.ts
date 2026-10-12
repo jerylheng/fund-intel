@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { recordAudit } from "@/lib/audit";
 
 const fields = ["full_name","preferred_name","email","phone","date_of_birth","residency_status","occupation","marital_status","dependants_count","annual_income","monthly_expenses","cash_savings","investments","cpf_oa","cpf_sa_ma_ra","property_value","outstanding_loans","monthly_investment","target_retirement_age","target_retirement_income","review_status","review_due_date","notes"] as const;
 const allowedStatus = new Set(["new","on_track","review_needed","action_needed"]);
@@ -41,6 +42,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   const { data, error } = await supabase.from("clients").update(patch).eq("id", id).eq("adviser_id", user.id).select("id").maybeSingle();
   if (error) return NextResponse.json({ error: "Could not update the client record." }, { status: 500 });
   if (!data) return NextResponse.json({ error: "Client not found." }, { status: 404 });
+  await recordAudit(supabase,user.id,"update","client",id,id,Object.keys(patch));
   return NextResponse.json({ ok: true });
 }
 export async function DELETE(_request: Request, context: { params: Promise<{ id: string }> }) {
@@ -53,5 +55,6 @@ export async function DELETE(_request: Request, context: { params: Promise<{ id:
   const { data, error } = await supabase.from("clients").delete().eq("id", id).eq("adviser_id", user.id).select("id").maybeSingle();
   if (error) return NextResponse.json({ error: "Could not delete the client record." }, { status: 500 });
   if (!data) return NextResponse.json({ error: "Client not found." }, { status: 404 });
+  await recordAudit(supabase,user.id,"delete","client",id,null,[]);
   return NextResponse.json({ ok: true });
 }

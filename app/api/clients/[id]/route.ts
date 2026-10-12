@@ -4,6 +4,7 @@ import { recordAudit } from "@/lib/audit";
 
 const fields = ["full_name","preferred_name","email","phone","date_of_birth","residency_status","occupation","marital_status","dependants_count","annual_income","monthly_expenses","cash_savings","investments","cpf_oa","cpf_sa_ma_ra","property_value","outstanding_loans","monthly_investment","target_retirement_age","target_retirement_income","review_status","review_due_date","notes"] as const;
 const allowedStatus = new Set(["new","on_track","review_needed","action_needed"]);
+const isValidIsoDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(new Date(value+"T00:00:00Z").getTime()) && new Date(value+"T00:00:00Z").toISOString().slice(0,10) === value;
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   const supabase = await createSupabaseServerClient();
   if (!supabase) return NextResponse.json({ error: "Database is not configured." }, { status: 503 });

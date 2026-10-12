@@ -56,7 +56,7 @@ export async function POST(request: Request) {
     target_retirement_income: numberOrZero(body.target_retirement_income),
     review_status: "new"
   };
-  const { data, error } = await supabase.from("clients").insert(payload).select("id,full_name,occupation,annual_income,monthly_expenses,cash_savings,investments,cpf_oa,cpf_sa_ma_ra,property_value,outstanding_loans,monthly_investment,target_retirement_age,target_retirement_income,review_status,review_due_date").single();
+  const { data, error } = await supabase.from("clients").insert(payload).select("id,full_name,email,phone,date_of_birth,residency_status,marital_status,dependants_count,occupation,annual_income,monthly_expenses,cash_savings,investments,cpf_oa,cpf_sa_ma_ra,property_value,outstanding_loans,monthly_investment,target_retirement_age,target_retirement_income,review_status,review_due_date").single();
   if (error || !data) return NextResponse.json({ error: "Could not save the client record." }, { status: 500 });
   return NextResponse.json({ client: {
     id: data.id, name: data.full_name, email: data.email || "", phone: data.phone || "", dateOfBirth: data.date_of_birth || "", residencyStatus: data.residency_status || "", maritalStatus: data.marital_status || "", dependantsCount: Number(data.dependants_count) || 0, role: data.occupation || "Client", age: data.date_of_birth ? Math.max(0, new Date().getFullYear() - new Date(data.date_of_birth).getFullYear() - (new Date().toISOString().slice(5,10) < data.date_of_birth.slice(5,10) ? 1 : 0)) : null,

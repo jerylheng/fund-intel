@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { recordAudit } from "@/lib/audit";
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const types=new Set(["hospitalisation","life","critical_illness","disability_income","personal_accident","long_term_care","investment_linked","savings","other"]);
 const statuses=new Set(["active","pending","lapsed","surrendered"]);
@@ -26,5 +27,5 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
  const policy_number_last4=typeof body.policy_number_last4==="string"?body.policy_number_last4.replace(/\D/g,"").slice(-4):null;
  const notes=typeof body.notes==="string"?body.notes.slice(0,4000):null;
  const {data,error}=await supabase.from("client_policies").insert({adviser_id:user.id,client_id:id,insurer,policy_name,policy_type,policy_number_last4,sum_assured,annual_premium,start_date:date(body.start_date),review_date:date(body.review_date),status,notes}).select("id,insurer,policy_name,policy_type,policy_number_last4,sum_assured,annual_premium,start_date,review_date,status,notes,created_at,updated_at").single();
- if(error||!data)return NextResponse.json({error:"Could not save policy. Confirm the client exists and the database migration is applied."},{status:500});return NextResponse.json({policy:data},{status:201});
+ if(error||!data)return NextResponse.json({error:"Could not save policy. Confirm the client exists and the database migration is applied."},{status:500});await recordAudit(supabase,user.id,"create","policy",data.id,id,["insurer","policy_name","policy_type","policy_number_last4","sum_assured","annual_premium","start_date","review_date","status","notes"]);return NextResponse.json({policy:data},{status:201});
 }

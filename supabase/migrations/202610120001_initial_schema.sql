@@ -39,6 +39,7 @@ create table if not exists public.clients (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+alter table public.clients add column if not exists asset_ledger_initialized boolean not null default false;
 create index if not exists clients_adviser_id_idx on public.clients(adviser_id);
 create index if not exists clients_review_due_idx on public.clients(adviser_id, review_due_date);
 

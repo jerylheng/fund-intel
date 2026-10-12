@@ -40,6 +40,9 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (patch.full_name === "") return NextResponse.json({ error: "Client name cannot be empty." }, { status: 400 });
   if (patch.review_status !== undefined && !allowedStatus.has(String(patch.review_status))) return NextResponse.json({ error: "Invalid review status." }, { status: 400 });
   if (Object.keys(patch).length === 0) return NextResponse.json({ error: "No valid fields provided." }, { status: 400 });
+  const summaryKeys = ["cash_savings","investments","cpf_oa","cpf_sa_ma_ra","property_value","outstanding_loans"];
+  const { data: ledgerState } = await supabase.from("clients").select("asset_ledger_initialized").eq("id",id).eq("adviser_id",user.id).maybeSingle();
+  if (ledgerState?.asset_ledger_initialized && summaryKeys.some(key => patch[key] !== undefined)) return NextResponse.json({ error: "This client has a detailed asset ledger. Update balances in Assets & liabilities so the summary stays reconciled." }, { status: 409 });
   const { data, error } = await supabase.from("clients").update(patch).eq("id", id).eq("adviser_id", user.id).select("id").maybeSingle();
   if (error) return NextResponse.json({ error: "Could not update the client record." }, { status: 500 });
   if (!data) return NextResponse.json({ error: "Client not found." }, { status: 404 });

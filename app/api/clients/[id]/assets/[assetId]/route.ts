@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { recalculateClientSummary } from "@/lib/assets";
+import { recordAudit } from "@/lib/audit";
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const assetCategories=new Set(["cash","investments","cpf_oa","cpf_sa_ma_ra","property"]);
 const liabilityCategories=new Set(["home_loan","personal_loan","credit_card","other_liability"]);
@@ -26,6 +27,7 @@ export async function PATCH(request:Request,context:{params:Promise<{id:string;a
  if(Object.keys(patch).length===0)return NextResponse.json({error:"No valid fields provided."},{status:400});
  const {data,error}=await supabase.from("client_assets_liabilities").update(patch).eq("id",assetId).eq("client_id",id).eq("adviser_id",user.id).select("id,item_type,category,description,current_value,interest_rate,monthly_payment,maturity_date,notes,created_at,updated_at").maybeSingle();
  if(error)return NextResponse.json({error:"Could not update ledger item."},{status:500});if(!data)return NextResponse.json({error:"Ledger item not found."},{status:404});
+ await recordAudit(supabase,user.id,"update","asset",assetId,id,Object.keys(patch));
  try{const summary=await recalculateClientSummary(supabase,user.id,id);return NextResponse.json({asset:data,summary:{cash:summary.cash_savings,investments:summary.investments,cpfOa:summary.cpf_oa,cpfSaMaRa:summary.cpf_sa_ma_ra,cpf:summary.cpf_oa+summary.cpf_sa_ma_ra,property:summary.property_value,loans:summary.outstanding_loans}});}catch{return NextResponse.json({error:"Item updated, but summary reconciliation failed."},{status:500});}
 }
 export async function DELETE(_request:Request,context:{params:Promise<{id:string;assetId:string}>}) {
@@ -34,5 +36,6 @@ export async function DELETE(_request:Request,context:{params:Promise<{id:string
  const {id,assetId}=await context.params;if(!uuid.test(id)||!uuid.test(assetId))return NextResponse.json({error:"Invalid id."},{status:400});
  const {data,error}=await supabase.from("client_assets_liabilities").delete().eq("id",assetId).eq("client_id",id).eq("adviser_id",user.id).select("id").maybeSingle();
  if(error)return NextResponse.json({error:"Could not delete ledger item."},{status:500});if(!data)return NextResponse.json({error:"Ledger item not found."},{status:404});
+ await recordAudit(supabase,user.id,"delete","asset",assetId,id,[]);
  try{const summary=await recalculateClientSummary(supabase,user.id,id);return NextResponse.json({ok:true,summary:{cash:summary.cash_savings,investments:summary.investments,cpfOa:summary.cpf_oa,cpfSaMaRa:summary.cpf_sa_ma_ra,cpf:summary.cpf_oa+summary.cpf_sa_ma_ra,property:summary.property_value,loans:summary.outstanding_loans}});}catch{return NextResponse.json({error:"Item deleted, but summary reconciliation failed."},{status:500});}
 }

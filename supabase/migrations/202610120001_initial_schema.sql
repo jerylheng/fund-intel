@@ -191,3 +191,24 @@ for all to authenticated using (adviser_id = (select auth.uid()) and exists (sel
 
 grant usage on schema public to authenticated;
 grant select, insert, update, delete on public.adviser_profiles, public.clients, public.client_dependants, public.client_assets_liabilities, public.client_policies, public.client_goals, public.client_reviews to authenticated;
+
+create table if not exists public.adviser_audit_events (
+  id uuid primary key default gen_random_uuid(),
+  adviser_id uuid not null references auth.users(id) on delete cascade,
+  client_id uuid references public.clients(id) on delete set null,
+  action text not null check (action in ('create','update','delete','review')),
+  entity_type text not null check (entity_type in ('client','goal','policy','review')),
+  entity_id text,
+  changed_fields jsonb not null default '[]'::jsonb,
+  created_at timestamptz not null default now()
+);
+create index if not exists audit_adviser_created_idx on public.adviser_audit_events(adviser_id, created_at desc);
+alter table public.adviser_audit_events enable row level security;
+drop policy if exists "advisers read own audit events" on public.adviser_audit_events;
+create policy "advisers read own audit events" on public.adviser_audit_events
+for select to authenticated using (adviser_id = (select auth.uid()));
+drop policy if exists "advisers create own audit events" on public.adviser_audit_events;
+create policy "advisers create own audit events" on public.adviser_audit_events
+for insert to authenticated with check (adviser_id = (select auth.uid()));
+grant select, insert on public.adviser_audit_events to authenticated;
+

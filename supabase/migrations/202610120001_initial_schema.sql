@@ -220,7 +220,7 @@ create table if not exists public.adviser_audit_events (
   adviser_id uuid not null references auth.users(id) on delete cascade,
   client_id uuid references public.clients(id) on delete set null,
   action text not null check (action in ('create','update','delete','review')),
-  entity_type text not null check (entity_type in ('client','goal','policy','review')),
+  entity_type text not null check (entity_type in ('client','goal','policy','review','asset','dependant','scenario')),
   entity_id text,
   changed_fields jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default now()
@@ -233,5 +233,7 @@ for select to authenticated using (adviser_id = (select auth.uid()));
 drop policy if exists "advisers create own audit events" on public.adviser_audit_events;
 create policy "advisers create own audit events" on public.adviser_audit_events
 for insert to authenticated with check (adviser_id = (select auth.uid()));
+alter table public.adviser_audit_events drop constraint if exists adviser_audit_events_entity_type_check;
+alter table public.adviser_audit_events add constraint adviser_audit_events_entity_type_check check (entity_type in ('client','goal','policy','review','asset','dependant','scenario'));
 grant select, insert on public.adviser_audit_events to authenticated;
 

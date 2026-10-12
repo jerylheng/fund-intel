@@ -14,7 +14,7 @@ export async function GET() {
   if (!supabase) return NextResponse.json({ error: "Database is not configured." }, { status: 503 });
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
-  const { data, error } = await supabase.from("clients").select("id,full_name,email,phone,date_of_birth,residency_status,marital_status,dependants_count,occupation,annual_income,monthly_expenses,cash_savings,investments,cpf_oa,cpf_sa_ma_ra,property_value,outstanding_loans,monthly_investment,target_retirement_age,target_retirement_income,review_status,review_due_date").eq("adviser_id", user.id).order("updated_at", { ascending: false });
+  const { data, error } = await supabase.from("clients").select("id,full_name,email,phone,date_of_birth,residency_status,marital_status,dependants_count,occupation,annual_income,monthly_expenses,cash_savings,investments,cpf_oa,cpf_sa_ma_ra,property_value,outstanding_loans,monthly_investment,target_retirement_age,target_retirement_income,review_status,review_due_date,asset_ledger_initialized").eq("adviser_id", user.id).order("updated_at", { ascending: false });
   if (error) return NextResponse.json({ error: "Could not load client records." }, { status: 500 });
   return NextResponse.json({ clients: (data ?? []).map(c => ({
     id: c.id, name: c.full_name, email: c.email || "", phone: c.phone || "", dateOfBirth: c.date_of_birth || "", residencyStatus: c.residency_status || "", maritalStatus: c.marital_status || "", dependantsCount: Number(c.dependants_count) || 0, role: c.occupation || "Client", age: c.date_of_birth ? Math.max(0, new Date().getFullYear() - new Date(c.date_of_birth).getFullYear() - (new Date().toISOString().slice(5,10) < c.date_of_birth.slice(5,10) ? 1 : 0)) : null,
@@ -23,7 +23,7 @@ export async function GET() {
     cpf: Number(c.cpf_oa) + Number(c.cpf_sa_ma_ra), cpfOa: Number(c.cpf_oa), cpfSaMaRa: Number(c.cpf_sa_ma_ra), property: Number(c.property_value),
     loans: Number(c.outstanding_loans), monthlyInvest: Number(c.monthly_investment),
     retirementAge: c.target_retirement_age, retirementTarget: Number(c.target_retirement_income),
-    status: statusMap[c.review_status] ?? "New", reviewDueDate: c.review_due_date
+    status: statusMap[c.review_status] ?? "New", reviewDueDate: c.review_due_date, assetLedgerInitialized: Boolean(c.asset_ledger_initialized)
   })) });
 }
 
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
     monthly_investment: numberOrZero(body.monthly_investment),
     target_retirement_age: retirementAgeInput,
     target_retirement_income: numberOrZero(body.target_retirement_income),
-    review_status: "new"
+    review_status: "new", asset_ledger_initialized: false
   };
   const { data, error } = await supabase.from("clients").insert(payload).select("id,full_name,email,phone,date_of_birth,residency_status,marital_status,dependants_count,occupation,annual_income,monthly_expenses,cash_savings,investments,cpf_oa,cpf_sa_ma_ra,property_value,outstanding_loans,monthly_investment,target_retirement_age,target_retirement_income,review_status,review_due_date").single();
   if (error || !data) return NextResponse.json({ error: "Could not save the client record." }, { status: 500 });
@@ -77,6 +77,6 @@ export async function POST(request: Request) {
     cpf: Number(data.cpf_oa) + Number(data.cpf_sa_ma_ra), cpfOa: Number(data.cpf_oa), cpfSaMaRa: Number(data.cpf_sa_ma_ra), property: Number(data.property_value),
     loans: Number(data.outstanding_loans), monthlyInvest: Number(data.monthly_investment),
     retirementAge: data.target_retirement_age, retirementTarget: Number(data.target_retirement_income),
-    status: statusMap[data.review_status] ?? "New", reviewDueDate: data.review_due_date
+    status: statusMap[data.review_status] ?? "New", reviewDueDate: data.review_due_date, assetLedgerInitialized: Boolean(data.asset_ledger_initialized)
   } }, { status: 201 });
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { recordAudit } from "@/lib/audit";
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 export async function PATCH(request:Request,context:{params:Promise<{id:string;goalId:string}>}) {
  const supabase=await createSupabaseServerClient();if(!supabase)return NextResponse.json({error:"Database is not configured."},{status:503});
@@ -17,12 +18,12 @@ export async function PATCH(request:Request,context:{params:Promise<{id:string;g
  if(patch.status!==undefined&&!allowedStatuses.has(String(patch.status)))return NextResponse.json({error:"Invalid goal status."},{status:400});
  if(Object.keys(patch).length===0)return NextResponse.json({error:"No valid fields provided."},{status:400});
  const {data,error}=await supabase.from("client_goals").update(patch).eq("id",goalId).eq("client_id",id).eq("adviser_id",user.id).select("id").maybeSingle();
- if(error)return NextResponse.json({error:"Could not update goal."},{status:500});if(!data)return NextResponse.json({error:"Goal not found."},{status:404});return NextResponse.json({ok:true});
+ if(error)return NextResponse.json({error:"Could not update goal."},{status:500});if(!data)return NextResponse.json({error:"Goal not found."},{status:404});await recordAudit(supabase,user.id,"update","goal",goalId,id,Object.keys(patch));return NextResponse.json({ok:true});
 }
 export async function DELETE(_request:Request,context:{params:Promise<{id:string;goalId:string}>}) {
  const supabase=await createSupabaseServerClient();if(!supabase)return NextResponse.json({error:"Database is not configured."},{status:503});
  const {data:{user}}=await supabase.auth.getUser();if(!user)return NextResponse.json({error:"Authentication required."},{status:401});
  const {id,goalId}=await context.params;if(!uuid.test(id)||!uuid.test(goalId))return NextResponse.json({error:"Invalid id."},{status:400});
  const {data,error}=await supabase.from("client_goals").delete().eq("id",goalId).eq("client_id",id).eq("adviser_id",user.id).select("id").maybeSingle();
- if(error)return NextResponse.json({error:"Could not delete goal."},{status:500});if(!data)return NextResponse.json({error:"Goal not found."},{status:404});return NextResponse.json({ok:true});
+ if(error)return NextResponse.json({error:"Could not delete goal."},{status:500});if(!data)return NextResponse.json({error:"Goal not found."},{status:404});await recordAudit(supabase,user.id,"delete","goal",goalId,id,[]);return NextResponse.json({ok:true});
 }

@@ -78,3 +78,6 @@ The initial migration creates:
 - Client review records
 
 All client-linked tables use adviser ownership policies and row-level security.
+
+
+Asset ledger build validation.

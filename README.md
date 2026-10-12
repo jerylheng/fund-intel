@@ -29,6 +29,7 @@ Finwise is an independent financial-planning workspace prototype for advisers. I
 - Client profiles: contact details, date of birth, residency and marital status, dependants count, income, expenses, cash, investments, separate CPF OA and SA/MA/RA balances, property, loans and retirement assumptions
 - Financial roadmap and illustrative retirement projection controls
 - Persistent financial goals with target, current funding, date, priority and status
+- Detailed asset and liability ledger that imports opening profile balances and reconciles cash, investments, CPF, property and liabilities back to the client net-worth summary
 - Persistent retirement scenarios with named assumptions, expected return, inflation, contribution, retirement age and income target
 - Household and dependant records with relationships, dates of birth and financial dependency
 - Persistent policy register with insurer, policy type, last four digits only, sum assured, premium, review date and status
@@ -42,7 +43,7 @@ Finwise is an independent financial-planning workspace prototype for advisers. I
 - This repository contains the application setup and migration; a Supabase project still must be provisioned and its URL/key added to Vercel.
 - Build/deployment must be verified after those environment variables are configured.
 - Financial projections are simplified illustrations, not actuarial/CPF calculations or personalised recommendations. They do not yet model CPF LIFE, taxes, fees, policy cash values, sequence-of-returns risk or all cash-flow timing details.
-- A detailed assets/liabilities ledger UI, dependant editing, full review history, client document storage and client-ready report exports remain to be built. CPF OA and combined SA/MA/RA values are captured separately in the client profile.
+- Full review history, client document storage and client-ready report exports remain to be built. CPF OA and combined SA/MA/RA values are captured separately in the client profile.
 - Policy records currently support create/read/delete; editing, document verification and coverage-gap analysis remain future work.
 - No team sharing, adviser firm hierarchy, audit-log viewer, export/report workflow, backup/restore testing or formal penetration test has been completed.
 - This is not an official AIA or Finjaro website. Demo-free mode is used; no fictitious client records are preloaded.

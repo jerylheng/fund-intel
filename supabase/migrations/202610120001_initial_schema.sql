@@ -125,6 +125,23 @@ create table if not exists public.client_reviews (
 );
 create index if not exists reviews_client_idx on public.client_reviews(client_id, review_date desc);
 
+create table if not exists public.client_planning_scenarios (
+  id uuid primary key default gen_random_uuid(),
+  adviser_id uuid not null references auth.users(id) on delete cascade,
+  client_id uuid not null references public.clients(id) on delete cascade,
+  name text not null,
+  starting_investable_assets numeric(14,2) not null default 0 check (starting_investable_assets >= 0),
+  monthly_contribution numeric(14,2) not null default 0 check (monthly_contribution >= 0),
+  retirement_age integer not null default 65 check (retirement_age between 40 and 100),
+  target_monthly_income numeric(14,2) not null default 5000 check (target_monthly_income >= 0),
+  expected_annual_return_pct numeric(5,2) not null default 5 check (expected_annual_return_pct between 0 and 15),
+  inflation_pct numeric(5,2) not null default 2.5 check (inflation_pct between 0 and 10),
+  notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists scenarios_client_idx on public.client_planning_scenarios(adviser_id, client_id, created_at desc);
+
 create or replace function public.set_updated_at()
 returns trigger language plpgsql as $$
 begin new.updated_at = now(); return new; end;
@@ -133,7 +150,7 @@ $$;
 do $$
 declare t text;
 begin
-  foreach t in array array['adviser_profiles','clients','client_dependants','client_assets_liabilities','client_policies','client_goals','client_reviews']
+  foreach t in array array['adviser_profiles','clients','client_dependants','client_assets_liabilities','client_policies','client_goals','client_reviews','client_planning_scenarios']
   loop
     execute format('drop trigger if exists set_updated_at on public.%I', t);
     execute format('create trigger set_updated_at before update on public.%I for each row execute function public.set_updated_at()', t);
@@ -160,6 +177,7 @@ alter table public.client_assets_liabilities enable row level security;
 alter table public.client_policies enable row level security;
 alter table public.client_goals enable row level security;
 alter table public.client_reviews enable row level security;
+alter table public.client_planning_scenarios enable row level security;
 
 drop policy if exists "advisers manage own profile" on public.adviser_profiles;
 create policy "advisers manage own profile" on public.adviser_profiles
@@ -185,12 +203,16 @@ drop policy if exists "advisers manage own goals" on public.client_goals;
 create policy "advisers manage own goals" on public.client_goals
 for all to authenticated using (adviser_id = (select auth.uid()) and exists (select 1 from public.clients c where c.id = client_id and c.adviser_id = (select auth.uid()))) with check (adviser_id = (select auth.uid()) and exists (select 1 from public.clients c where c.id = client_id and c.adviser_id = (select auth.uid())));
 
+drop policy if exists "advisers manage own scenarios" on public.client_planning_scenarios;
+create policy "advisers manage own scenarios" on public.client_planning_scenarios
+for all to authenticated using (adviser_id = (select auth.uid()) and exists (select 1 from public.clients c where c.id = client_id and c.adviser_id = (select auth.uid()))) with check (adviser_id = (select auth.uid()) and exists (select 1 from public.clients c where c.id = client_id and c.adviser_id = (select auth.uid())));
+
 drop policy if exists "advisers manage own reviews" on public.client_reviews;
 create policy "advisers manage own reviews" on public.client_reviews
 for all to authenticated using (adviser_id = (select auth.uid()) and exists (select 1 from public.clients c where c.id = client_id and c.adviser_id = (select auth.uid()))) with check (adviser_id = (select auth.uid()) and exists (select 1 from public.clients c where c.id = client_id and c.adviser_id = (select auth.uid())));
 
 grant usage on schema public to authenticated;
-grant select, insert, update, delete on public.adviser_profiles, public.clients, public.client_dependants, public.client_assets_liabilities, public.client_policies, public.client_goals, public.client_reviews to authenticated;
+grant select, insert, update, delete on public.adviser_profiles, public.clients, public.client_dependants, public.client_assets_liabilities, public.client_policies, public.client_goals, public.client_reviews, public.client_planning_scenarios to authenticated;
 
 create table if not exists public.adviser_audit_events (
   id uuid primary key default gen_random_uuid(),

@@ -37,7 +37,7 @@ export async function POST(request: Request) {
   const email = typeof body.email === "string" && body.email.trim() ? body.email.trim().slice(0, 254) : null;
   const occupation = typeof body.occupation === "string" ? body.occupation.trim().slice(0, 120) : null;
   const phone = typeof body.phone === "string" ? body.phone.trim().slice(0, 40) : null;
-  const date_of_birth = typeof body.date_of_birth === "string" && /^\\d{4}-\\d{2}-\\d{2}$/.test(body.date_of_birth) ? body.date_of_birth : null;
+  const date_of_birth = typeof body.date_of_birth === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.date_of_birth) ? body.date_of_birth : null;
   const residency_status = typeof body.residency_status === "string" ? body.residency_status.slice(0, 60) : null;
   const marital_status = typeof body.marital_status === "string" ? body.marital_status.slice(0, 30) : null;
   const dependants_count = Math.min(30, Math.max(0, Math.round(numberOrZero(body.dependants_count))));

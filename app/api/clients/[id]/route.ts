@@ -18,7 +18,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (typeof patch.full_name === "string") patch.full_name = patch.full_name.trim().slice(0, 120);
   if (patch.email !== undefined && typeof patch.email === "string") patch.email = patch.email.trim().slice(0, 254) || null;
   if (patch.phone !== undefined && typeof patch.phone === "string") patch.phone = patch.phone.trim().slice(0, 40) || null;
-  if (patch.date_of_birth !== undefined && patch.date_of_birth !== null && (typeof patch.date_of_birth !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(patch.date_of_birth))) return NextResponse.json({ error: "Use a valid date of birth." }, { status: 400 });
+  if (patch.date_of_birth !== undefined && patch.date_of_birth !== null && (typeof patch.date_of_birth !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(patch.date_of_birth) || patch.date_of_birth > new Date().toISOString().slice(0,10) || new Date(patch.date_of_birth+"T00:00:00Z").toISOString().slice(0,10) !== patch.date_of_birth)) return NextResponse.json({ error: "Use a valid date of birth in the past." }, { status: 400 });
   for (const key of ["annual_income","monthly_expenses","cash_savings","investments","cpf_oa","cpf_sa_ma_ra","property_value","outstanding_loans","monthly_investment","target_retirement_income"] as const) {
     if (patch[key] !== undefined) {
       const n = Number(patch[key]);

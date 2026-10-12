@@ -49,11 +49,11 @@ export default function HomePage() {
     const incomeGap=Math.max(0,targetAtRetirement-r.cpfLife-r.otherRetirementIncome);
     const capitalNeeded=incomeGap*12*25;
     const projectedTotal=projectedInvestments+projectedCpf;
-    const shortfall=Math.max(0,capitalNeeded-projectedTotal);
-    const retirementMonthlyIncome=r.cpfLife+r.otherRetirementIncome+projectedTotal*0.04/12;
+    const shortfall=Math.max(0,capitalNeeded-projectedInvestments);
+    const retirementMonthlyIncome=r.cpfLife+r.otherRetirementIncome+projectedInvestments*0.04/12;
     const yearsToHorizon=Math.max(0,r.retirementHorizon-r.retirementAge);
     const drawdownNeed=Math.max(0,targetAtRetirement-r.cpfLife-r.otherRetirementIncome);
-    const portfolioAtHorizon=fv(projectedTotal,-drawdownNeed*12,r.returnRate,yearsToHorizon);
+    let portfolioAtHorizon=projectedInvestments;\n    for(let year=0;year<yearsToHorizon;year++) portfolioAtHorizon=Math.max(0,portfolioAtHorizon*(1+r.returnRate/100)-drawdownNeed*12);
     const strengths:string[]=[];const gaps:string[]=[];const actions:string[]=[];
     if(monthlySurplus>0){strengths.push("Positive monthly cash flow of "+money(monthlySurplus)+", providing capacity to build reserves and invest.");}else{gaps.push("Monthly cash flow is "+money(monthlySurplus)+". Spending and debt commitments should be reviewed before increasing investments.");actions.push("Complete a cash-flow review and establish a realistic monthly surplus target.");}
     if(savingsRate>=20)strengths.push("Savings rate of "+savingsRate.toFixed(1)+"% is a useful foundation for long-term planning.");else gaps.push("Savings rate is "+savingsRate.toFixed(1)+"%; assess whether contributions can rise sustainably over time.");

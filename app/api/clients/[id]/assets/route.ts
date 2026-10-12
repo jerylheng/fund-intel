@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { ensureOpeningBalances, recalculateClientSummary } from "@/lib/assets";
+import { recordAudit } from "@/lib/audit";
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const assetCategories=new Set(["cash","investments","cpf_oa","cpf_sa_ma_ra","property"]);
 const liabilityCategories=new Set(["home_loan","personal_loan","credit_card","other_liability"]);
@@ -35,5 +36,6 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
  try{await ensureOpeningBalances(supabase,user.id,id);}catch(e){return NextResponse.json({error:e instanceof Error?e.message:"Could not initialize the ledger."},{status:400});}
  const {data,error}=await supabase.from("client_assets_liabilities").insert({adviser_id:user.id,client_id:id,item_type,category,description,current_value,interest_rate,monthly_payment,maturity_date,notes}).select("id,item_type,category,description,current_value,interest_rate,monthly_payment,maturity_date,notes,created_at,updated_at").single();
  if(error||!data)return NextResponse.json({error:"Could not save the ledger item."},{status:500});
+ await recordAudit(supabase,user.id,"create","asset",data.id,id,["item_type","category","description","current_value","interest_rate","monthly_payment","maturity_date","notes"]);
  try{const summary=await recalculateClientSummary(supabase,user.id,id);return NextResponse.json({asset:data,summary:{cash:summary.cash_savings,investments:summary.investments,cpfOa:summary.cpf_oa,cpfSaMaRa:summary.cpf_sa_ma_ra,cpf:summary.cpf_oa+summary.cpf_sa_ma_ra,property:summary.property_value,loans:summary.outstanding_loans}},{status:201});}catch{return NextResponse.json({error:"Ledger item saved, but summary reconciliation failed. Refresh and retry reconciliation."},{status:500});}
 }

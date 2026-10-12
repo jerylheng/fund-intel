@@ -41,7 +41,16 @@ export async function POST(request: Request) {
   const date_of_birth = typeof body.date_of_birth === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.date_of_birth) ? body.date_of_birth : null;
   const residency_status = typeof body.residency_status === "string" ? body.residency_status.slice(0, 60) : null;
   const marital_status = typeof body.marital_status === "string" ? body.marital_status.slice(0, 30) : null;
-  const dependants_count = Math.min(30, Math.max(0, Math.round(numberOrZero(body.dependants_count))));
+  const dependantsRaw = Number(body.dependants_count ?? 0);
+  if (!Number.isInteger(dependantsRaw) || dependantsRaw < 0 || dependantsRaw > 30) return NextResponse.json({ error: "Dependants must be a whole number from 0 to 30." }, { status: 400 });
+  const dependants_count = dependantsRaw;
+  for (const key of ["annual_income","monthly_expenses","cash_savings","investments","cpf_oa","cpf_sa_ma_ra","property_value","outstanding_loans","monthly_investment","target_retirement_income"] as const) {
+    const n = Number(body[key] ?? 0);
+    if (!Number.isFinite(n) || n < 0 || n > 999999999999) return NextResponse.json({ error: "Enter valid non-negative financial amounts." }, { status: 400 });
+  }
+  const retirementAgeInput = Number(body.target_retirement_age ?? 65);
+  if (!Number.isInteger(retirementAgeInput) || retirementAgeInput < 40 || retirementAgeInput > 100) return NextResponse.json({ error: "Retirement age must be from 40 to 100." }, { status: 400 });
+  if (date_of_birth && (date_of_birth > new Date().toISOString().slice(0,10) || new Date(date_of_birth+"T00:00:00Z").toISOString().slice(0,10) !== date_of_birth)) return NextResponse.json({ error: "Enter a valid date of birth in the past." }, { status: 400 });
   const payload = {
     adviser_id: user.id, full_name, email, phone, date_of_birth, residency_status, marital_status, dependants_count, occupation,
     annual_income: numberOrZero(body.annual_income),
@@ -53,7 +62,7 @@ export async function POST(request: Request) {
     property_value: numberOrZero(body.property_value),
     outstanding_loans: numberOrZero(body.outstanding_loans),
     monthly_investment: numberOrZero(body.monthly_investment),
-    target_retirement_age: Math.min(100, Math.max(40, Math.round(numberOrZero(body.target_retirement_age) || 65))),
+    target_retirement_age: retirementAgeInput,
     target_retirement_income: numberOrZero(body.target_retirement_income),
     review_status: "new"
   };

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { recordAudit } from "@/lib/audit";
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const validDate=(value:string)=>/^\d{4}-\d{2}-\d{2}$/.test(value)&&!Number.isNaN(new Date(value+"T00:00:00Z").getTime())&&new Date(value+"T00:00:00Z").toISOString().slice(0,10)===value;
 export async function GET(_request:Request,context:{params:Promise<{id:string}>}) {
@@ -23,6 +24,7 @@ export async function POST(request:Request,context:{params:Promise<{id:string}>}
  if(date_of_birth&&(!validDate(date_of_birth)||date_of_birth>new Date().toISOString().slice(0,10)))return NextResponse.json({error:"Enter a valid date of birth in the past."},{status:400});
  const {data,error}=await supabase.from("client_dependants").insert({adviser_id:user.id,client_id:id,full_name,relationship,date_of_birth,financially_dependent,notes}).select("id,full_name,relationship,date_of_birth,financially_dependent,notes,created_at,updated_at").single();
  if(error||!data)return NextResponse.json({error:"Could not save household member. Confirm the client exists and the database migration is applied."},{status:500});
+ await recordAudit(supabase,user.id,"create","dependant",data.id,id,["full_name","relationship","date_of_birth","financially_dependent","notes"]);
  const {count}=await supabase.from("client_dependants").select("id",{count:"exact",head:true}).eq("client_id",id).eq("adviser_id",user.id);
  if(typeof count==="number")await supabase.from("clients").update({dependants_count:count}).eq("id",id).eq("adviser_id",user.id);
  return NextResponse.json({dependant:data},{status:201});

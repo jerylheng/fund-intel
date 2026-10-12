@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { recordAudit } from "@/lib/audit";
 
-const isValidIsoDate = (value: string) => /^\\d{4}-\\d{2}-\\d{2}$/.test(value) && !Number.isNaN(new Date(value+"T00:00:00Z").getTime()) && new Date(value+"T00:00:00Z").toISOString().slice(0,10) === value;
+const isValidIsoDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(new Date(value+"T00:00:00Z").getTime()) && new Date(value+"T00:00:00Z").toISOString().slice(0,10) === value;
 const numberOrZero = (value: unknown) => {
   const n = typeof value === "number" ? value : Number(value ?? 0);
   return Number.isFinite(n) && n >= 0 ? n : 0;

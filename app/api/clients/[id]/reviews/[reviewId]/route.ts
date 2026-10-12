@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { recordAudit } from "@/lib/audit";
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const allowedActions=new Set(["Confirm dependants and essential monthly expenses","Review existing policies and employer benefits","Discuss emergency savings and debt obligations","Estimate income replacement and critical illness needs","Review nominations, will and legacy intentions"]);
 export async function PATCH(request:Request,context:{params:Promise<{id:string;reviewId:string}>}) {
@@ -14,5 +15,6 @@ export async function PATCH(request:Request,context:{params:Promise<{id:string;r
  if(Object.keys(patch).length===0)return NextResponse.json({error:"No valid fields provided."},{status:400});
  const {data,error}=await supabase.from("client_reviews").update(patch).eq("id",reviewId).eq("client_id",id).eq("adviser_id",user.id).select("id,review_date,next_review_date,agreed_actions,meeting_notes,created_at,updated_at").maybeSingle();
  if(error)return NextResponse.json({error:"Could not update review checklist."},{status:500});if(!data)return NextResponse.json({error:"Review not found."},{status:404});
+ await recordAudit(supabase,user.id,"review","review",reviewId,id,Object.keys(patch));
  return NextResponse.json({review:{...data,agreed_actions:Array.isArray(data.agreed_actions)?data.agreed_actions.filter((x):x is string=>typeof x==="string"&&allowedActions.has(x)):[]}});
 }

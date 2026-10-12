@@ -20,7 +20,7 @@ const initialClients:Client[] = [];
 const emptyClient:Client = {id:0,name:"No client selected",initials:"—",role:"Add a client to begin",age:35,status:"New",income:0,expenses:0,cash:0,investments:0,cpf:0,cpfOa:0,cpfSaMaRa:0,property:0,loans:0,monthlyInvest:0,retirementAge:65,retirementTarget:0};
 const money=(v:number)=>new Intl.NumberFormat("en-SG",{style:"currency",currency:"SGD",maximumFractionDigits:0}).format(v);
 const compact=(v:number)=>v>=1_000_000?"$"+(v/1_000_000).toFixed(2)+"m":"$"+Math.round(v/1000)+"k";
-const navItems=[{id:"overview",label:"Overview",icon:LayoutDashboard},{id:"clients",label:"Clients",icon:Users},{id:"roadmap",label:"Financial roadmap",icon:Activity},{id:"retirement",label:"Retirement planner",icon:TrendingUp},{id:"protection",label:"Protection review",icon:ShieldCheck},{id:"goals",label:"Goals & priorities",icon:Target},{id:"policies",label:"Policy register",icon:FileText},{id:"household",label:"Household",icon:HeartPulse}];
+const navItems=[{id:"overview",label:"Overview",icon:LayoutDashboard},{id:"clients",label:"Clients",icon:Users},{id:"roadmap",label:"Financial roadmap",icon:Activity},{id:"retirement",label:"Retirement planner",icon:TrendingUp},{id:"protection",label:"Protection review",icon:ShieldCheck},{id:"goals",label:"Goals & priorities",icon:Target},{id:"policies",label:"Policy register",icon:FileText},{id:"household",label:"Household",icon:Users}];
 export default function HomePage(){
  const [section,setSection]=useState("overview");
  const [clients,setClients]=useState(initialClients);
